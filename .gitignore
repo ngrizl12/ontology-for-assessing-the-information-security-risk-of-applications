@@ -5,4 +5,3 @@
 *.csv
 *.xml
 owl_files_processing/owl_files/security_ontology_full.owl
-owl_files_processing/scripts_for_create_ontology/reasoning.py
