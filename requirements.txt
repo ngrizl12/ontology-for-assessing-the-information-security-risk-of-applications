@@ -1,0 +1,5 @@
+pandas>=2.0.0
+owlready2>=0.40.0
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+deep-translator>=1.9.0
