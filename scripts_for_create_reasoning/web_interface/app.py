@@ -12,26 +12,19 @@ from owlready2 import *
 import ssl
 import urllib.request
 
-# ============================================================
-# ССЫЛКИ НА ЯНДЕКС ДИСК
-# ============================================================
 YADISK_FILES = {
-    "security_ontology_full.owl": "https://disk.360.yandex.ru/d/-_sQlbE_G-Hvog",  # <- сюда
-    "cwe_all.csv":                "https://disk.360.yandex.ru/d/JG_e81Q-lqthQA",  # <- сюда
-    "capec_all.csv":              "https://disk.360.yandex.ru/d/LWInP1emg_xCHA",  # <- сюда
-    "cve_all_done.csv":           "https://disk.360.yandex.ru/d/kF-DPhyPmWC7_A",  # <- сюда
-    "cwe_chains.json":            "https://disk.360.yandex.ru/d/kpstkUDrpEo_qA",  # <- сюда
-    "risk_reference_distribution.json": "https://disk.360.yandex.ru/d/Tu7XjDS5STVP6w",  # <- сюда
+    "security_ontology_full.owl": "https://disk.360.yandex.ru/d/-_sQlbE_G-Hvog",
+    "cwe_all.csv": "https://disk.360.yandex.ru/d/JG_e81Q-lqthQA",
+    "capec_all.csv": "https://disk.360.yandex.ru/d/LWInP1emg_xCHA",
+    "cve_all_done.csv": "https://disk.360.yandex.ru/d/kF-DPhyPmWC7_A",
+    "cwe_chains.json": "https://disk.360.yandex.ru/d/kpstkUDrpEo_qA",
+    "risk_reference_distribution.json": "https://disk.360.yandex.ru/d/Tu7XjDS5STVP6w",
 }
 
-# ============================================================
-# ЗАГРУЗКА С ЯНДЕКС ДИСКА
-# ============================================================
 def download_from_yadisk(public_url, output_path):
     if os.path.exists(output_path):
-        # Проверяем что файл не пустой
         if os.path.getsize(output_path) < 1000:
-            os.remove(output_path)  # удаляем битый файл
+            os.remove(output_path)
         else:
             return True
     try:
@@ -46,22 +39,16 @@ def download_from_yadisk(public_url, output_path):
                 f.write(chunk)
         return True
     except Exception as e:
-        st.error(f"❌ Ошибка загрузки {output_path}: {e}")
+        st.error(f"Ошибка загрузки {output_path}: {e}")
         return False
 
-# ============================================================
-# ПУТИ К ФАЙЛАМ
-# ============================================================
-ONTO_PATH             = "security_ontology_full.owl"
-CWE_CSV_PATH          = "cwe_all.csv"
-CAPEC_CSV_PATH        = "capec_all.csv"
+ONTO_PATH = "security_ontology_full.owl"
+CWE_CSV_PATH = "cwe_all.csv"
+CAPEC_CSV_PATH = "capec_all.csv"
 CVE_PROCESSING_OUTPUT = "cve_all_done.csv"
-CWE_CHAINS_FILE       = "cwe_chains.json"
-RISK_REFERENCE_FILE   = "risk_reference_distribution.json"
+CWE_CHAINS_FILE = "cwe_chains.json"
+RISK_REFERENCE_FILE = "risk_reference_distribution.json"
 
-# ============================================================
-# КОНФИГ СТРАНИЦЫ
-# ============================================================
 st.set_page_config(
     page_title="Система оценки рисков безопасности",
     layout="wide",
@@ -73,9 +60,6 @@ if css_file.exists():
     with open(css_file, "r", encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ============================================================
-# SESSION STATE
-# ============================================================
 if 'step' not in st.session_state: st.session_state.step = 0
 if 'components' not in st.session_state: st.session_state.components = []
 if 'component_versions' not in st.session_state: st.session_state.component_versions = {}
@@ -84,9 +68,6 @@ if 'analysis_results' not in st.session_state: st.session_state.analysis_results
 if 'data_loaded' not in st.session_state: st.session_state.data_loaded = False
 if 'selected_component' not in st.session_state: st.session_state.selected_component = None
 
-# ============================================================
-# ЗАГРУЗКА ДАННЫХ
-# ============================================================
 if not st.session_state.data_loaded:
     loading_placeholder = st.empty()
     progress_placeholder = st.empty()
@@ -104,12 +85,12 @@ if not st.session_state.data_loaded:
         with progress_placeholder:
             st.progress(progress_value)
 
-    update_loading("📥 Скачивание файлов данных...", 5)
+    update_loading("Загрузка файлов данных...", 5)
     for filename, url in YADISK_FILES.items():
-        update_loading(f"📥 Загрузка {filename}...", 5)
+        update_loading(f"Загрузка {filename}...", 5)
         download_from_yadisk(url, filename)
 
-    update_loading("📡 Загрузка онтологии безопасности...", 20)
+    update_loading("Загрузка онтологии безопасности...", 20)
     onto = None
     cpe_list = []
     if os.path.exists(ONTO_PATH):
@@ -119,15 +100,15 @@ if not st.session_state.data_loaded:
         except Exception:
             cpe_list = []
 
-    update_loading("📡 Обработка онтологии...", 35)
+    update_loading("Обработка онтологии...", 35)
     epss_cache, cvss_cache, cwe_chains_cache = {}, {}, {}
     risk_reference_distribution = []
 
     if os.path.exists(RISK_REFERENCE_FILE):
-        with open(RISK_REFERENCE_FILE, 'r', encoding='utf-8') as f:
+        with open(RISK_REFERENCE_FILE, 'r', encoding="utf-8") as f:
             risk_reference_distribution = json.load(f)
 
-    update_loading("📊 Загрузка данных CVE...", 50)
+    update_loading("Загрузка данных CVE...", 50)
     if os.path.exists(CVE_PROCESSING_OUTPUT):
         cve_df = pd.read_csv(CVE_PROCESSING_OUTPUT)
         for _, row in cve_df.iterrows():
@@ -135,12 +116,12 @@ if not st.session_state.data_loaded:
             if pd.notna(row.get('baseScore')):
                 cvss_cache[cve_id] = float(row['baseScore'])
 
-    update_loading("📊 Загрузка цепочек CWE...", 65)
+    update_loading("Загрузка цепочек CWE...", 65)
     if os.path.exists(CWE_CHAINS_FILE):
-        with open(CWE_CHAINS_FILE, 'r', encoding='utf-8') as f:
+        with open(CWE_CHAINS_FILE, 'r', encoding="utf-8") as f:
             cwe_chains_cache = json.load(f)
 
-    update_loading("📊 Обработка данных CWE...", 75)
+    update_loading("Обработка данных CWE...", 75)
     cwe_dict = {}
     if os.path.exists(CWE_CSV_PATH):
         cwe_df = pd.read_csv(CWE_CSV_PATH)
@@ -152,7 +133,7 @@ if not st.session_state.data_loaded:
                 'category': row.get('Category', None) if pd.notna(row.get('Category', None)) else None
             }
 
-    update_loading("📊 Обработка данных CAPEC...", 85)
+    update_loading("Обработка данных CAPEC...", 85)
     capec_dict = {}
     if os.path.exists(CAPEC_CSV_PATH):
         capec_df = pd.read_csv(CAPEC_CSV_PATH)
@@ -165,10 +146,10 @@ if not st.session_state.data_loaded:
                 'typical_severity': row.get('Typical_Severity', None)
             }
 
-    update_loading("✅ Финализация...", 95)
+    update_loading("Финализация...", 95)
     import time
     time.sleep(0.3)
-    update_loading("✅ Система готова к работе!", 100)
+    update_loading("Система готова к работе!", 100)
     time.sleep(0.2)
 
     loading_placeholder.empty()
@@ -194,9 +175,6 @@ else:
     cwe_dict = st.session_state.cwe_dict
     capec_dict = st.session_state.capec_dict
 
-# ============================================================
-# КОНСТАНТЫ
-# ============================================================
 SEVERITY_TO_CVSS = {'CRITICAL': 9.0, 'HIGH': 8.0, 'MEDIUM': 5.5, 'LOW': 2.5}
 TYPICAL_SEVERITY_COEFF = {'very high': 9, 'high': 7, 'medium': 5, 'low': 3}
 ASSET_IMPORTANCE = {
@@ -207,9 +185,6 @@ ASSET_IMPORTANCE = {
 }
 MAX_RISK_APP = 24.0
 
-# ============================================================
-# ФУНКЦИИ
-# ============================================================
 def normalize(text):
     if not text: return None
     return text.lower().replace("_","").replace("-","").replace(".","")
@@ -364,19 +339,13 @@ def extract_graph(cpes):
                     capecs.add(capec)
     return cves, cwes, capecs
 
-# ============================================================
-# ЗАГОЛОВОК
-# ============================================================
 st.title("Система оценки рисков безопасности веб-приложений")
 st.markdown("**Автоматизированная оценка рисков на основе онтологической модели**")
 
 if not onto:
-    st.error("❌ Онтология не загружена!")
+    st.error("Онтология не загружена!")
     st.stop()
 
-# ============================================================
-# SIDEBAR
-# ============================================================
 with st.sidebar:
     st.header("Настройки")
     st.subheader("Шкала рисков")
@@ -409,9 +378,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# ============================================================
-# ШАГ 0 — ВВОД КОМПОНЕНТОВ
-# ============================================================
 if st.session_state.step == 0:
     st.header("Шаг 1: Введите компоненты")
 
@@ -429,7 +395,7 @@ if st.session_state.step == 0:
             )
             if submit_btn:
                 if not components_input:
-                    st.error("⚠️ Введите хотя бы один компонент!")
+                    st.error("Введите хотя бы один компонент!")
                 else:
                     st.session_state.components = [
                         c.strip() for c in components_input.split(",")
@@ -441,9 +407,6 @@ if st.session_state.step == 0:
 
     st.stop()
 
-# ============================================================
-# ШАГ 1 — ВЫБОР ВЕРСИЙ И ВАЖНОСТИ
-# ============================================================
 if st.session_state.step == 1:
     st.header("Шаг 2: Выберите версии и важность")
 
@@ -468,19 +431,19 @@ if st.session_state.step == 1:
         version_list = get_version_list(versions_dict) if versions_dict else []
 
         select_key = f"ver_select_{idx}"
-        input_key  = f"ver_input_{idx}"
-        imp_key    = f"imp_select_{idx}"
+        input_key = f"ver_input_{idx}"
+        imp_key = f"imp_select_{idx}"
 
         version_selected = False
 
         if version:
-            st.success(f"✅ Версия указана: **{version}**")
+            st.success(f"Версия указана: **{version}**")
             if version in versions_dict:
                 versions_found[comp] = {
                     'version': version, 'cpes': versions_dict[version],
                     'product': product, 'vendor': vendor
                 }
-                st.success("✅ Версия найдена")
+                st.success("Версия найдена")
                 version_selected = True
             else:
                 found_similar = False
@@ -490,7 +453,7 @@ if st.session_state.step == 1:
                             'version': v, 'cpes': cpes,
                             'product': product, 'vendor': vendor
                         }
-                        st.success("✅ Версия найдена")
+                        st.success("Версия найдена")
                         version_selected = True
                         found_similar = True
                         break
@@ -501,7 +464,7 @@ if st.session_state.step == 1:
                         'cpes': versions_dict[first_version],
                         'product': product, 'vendor': vendor
                     }
-                    st.info(f"ℹ️ Использована версия: {first_version}")
+                    st.info(f"Использована версия: {first_version}")
                     version_selected = True
                 elif not versions_dict and matches:
                     versions_found[comp] = {
@@ -509,10 +472,10 @@ if st.session_state.step == 1:
                         'cpes': [c for c, v, p in matches],
                         'product': product, 'vendor': vendor
                     }
-                    st.info("ℹ️ Версия не найдена в базе, используем все CPE")
+                    st.info("Версия не найдена в базе, используем все CPE")
                     version_selected = True
                 elif not versions_dict and not matches:
-                    st.warning(f"⚠️ Компонент '{product}' не найден в базе")
+                    st.warning(f"Компонент '{product}' не найден в базе")
                     versions_found[comp] = {
                         'version': None, 'cpes': [],
                         'product': product, 'vendor': vendor
@@ -542,7 +505,7 @@ if st.session_state.step == 1:
                     'cpes': versions_dict[sel_label],
                     'product': product, 'vendor': vendor
                 }
-                st.success(f"✅ Версия найдена: {sel_label}")
+                st.success(f"Версия найдена: {sel_label}")
                 version_selected = True
             elif manual_version and manual_version.strip():
                 sel_ver = manual_version.strip()
@@ -552,7 +515,7 @@ if st.session_state.step == 1:
                         'version': sel_ver, 'cpes': versions_dict[sel_ver],
                         'product': product, 'vendor': vendor
                     }
-                    st.success("✅ Версия найдена")
+                    st.success("Версия найдена")
                     version_selected = True
                     found = True
                 else:
@@ -562,7 +525,7 @@ if st.session_state.step == 1:
                                 'version': v, 'cpes': cpes,
                                 'product': product, 'vendor': vendor
                             }
-                            st.success("✅ Версия найдена")
+                            st.success("Версия найдена")
                             version_selected = True
                             found = True
                             break
@@ -572,7 +535,7 @@ if st.session_state.step == 1:
                         'cpes': [c for c, v, p in matches],
                         'product': product, 'vendor': vendor
                     }
-                    st.warning(f"⚠️ Версия '{sel_ver}' не найдена в базе")
+                    st.warning(f"Версия '{sel_ver}' не найдена в базе")
                     version_selected = True
             else:
                 versions_found[comp] = {
@@ -587,13 +550,13 @@ if st.session_state.step == 1:
                     'cpes': [c for c, v, p in matches],
                     'product': product, 'vendor': vendor
                 }
-                st.info("ℹ️ Версии не найдены, используем все CPE")
+                st.info("Версии не найдены, используем все CPE")
             else:
                 versions_found[comp] = {
                     'version': None, 'cpes': [],
                     'product': product, 'vendor': vendor
                 }
-                st.warning(f"⚠️ Компонент '{product}' не найден в базе")
+                st.warning(f"Компонент '{product}' не найден в базе")
 
         importance_select = st.selectbox(
             f"Важность компонента **{comp}**:",
@@ -612,7 +575,7 @@ if st.session_state.step == 1:
         st.write(f"Коэффициент важности: **{importance_coeff}**")
         st.divider()
 
-    st.session_state.component_versions  = versions_found
+    st.session_state.component_versions = versions_found
     st.session_state.component_importance = component_importance
 
     col1, col2 = st.columns([3, 1])
@@ -623,27 +586,24 @@ if st.session_state.step == 1:
                 for v in versions_found.values()
             )
             if has_unselected:
-                st.error("⚠️ Выберите версию для всех компонентов!")
+                st.error("Выберите версию для всех компонентов!")
             else:
                 st.session_state.step = 2
                 st.rerun()
     with col2:
-        if st.button("⬅️ Назад", use_container_width=True):
+        if st.button("Назад", use_container_width=True):
             st.session_state.step = 0
             st.rerun()
 
     st.stop()
 
-# ============================================================
-# ШАГ 2 — АНАЛИЗ
-# ============================================================
 if st.session_state.step == 2:
     component_risks = []
 
     for comp in st.session_state.components:
-        ver_info       = st.session_state.component_versions.get(comp, {})
-        selected_cpes  = ver_info.get('cpes', [])
-        imp_info       = st.session_state.component_importance.get(comp, {'label': 'medium', 'coeff': 0.5})
+        ver_info = st.session_state.component_versions.get(comp, {})
+        selected_cpes = ver_info.get('cpes', [])
+        imp_info = st.session_state.component_importance.get(comp, {'label': 'medium', 'coeff': 0.5})
         importance_label = imp_info['label']
         importance_coeff = imp_info['coeff']
 
@@ -703,9 +663,6 @@ if st.session_state.step == 2:
     st.session_state.step = 3
     st.rerun()
 
-# ============================================================
-# ШАГ 3 — РЕЗУЛЬТАТЫ
-# ============================================================
 if st.session_state.step == 3:
     cr = st.session_state.analysis_results
 
@@ -715,21 +672,21 @@ if st.session_state.step == 3:
     )
 
     if cr:
-        total       = sum(c["count"] for c in cr)
-        max_all     = max((c["max_risk"] for c in cr if c["count"] > 0), default=0)
+        total = sum(c["count"] for c in cr)
+        max_all = max((c["max_risk"] for c in cr if c["count"] > 0), default=0)
         vuln_factor = math.log(1 + total)
-        app_risk    = max_all + vuln_factor
+        app_risk = max_all + vuln_factor
 
-        risk_lvl  = risk_level(app_risk)
+        risk_lvl = risk_level(app_risk)
         risk_class = {
             "Критический": "risk-critical",
-            "Высокий":     "risk-high",
-            "Средний":     "risk-medium",
-            "Низкий":      "risk-low"
+            "Высокий": "risk-high",
+            "Средний": "risk-medium",
+            "Низкий": "risk-low"
         }.get(risk_lvl, "risk-medium")
         risk_icon = {
             "Критический": "🔴", "Высокий": "🟠",
-            "Средний": "🟡",    "Низкий":  "🟢"
+            "Средний": "🟡", "Низкий": "🟢"
         }.get(risk_lvl, "🔵")
 
         st.markdown(f"""
@@ -742,9 +699,9 @@ if st.session_state.step == 3:
 
         df = pd.DataFrame([{
             "Компонент": c["component"],
-            "Важность":  f"{c['importance']} ({c['importance_coeff']})",
-            "Max риск":  f"{c['max_risk']:.2f}",
-            "Avg риск":  f"{c['avg_risk']:.2f}"
+            "Важность": f"{c['importance']} ({c['importance_coeff']})",
+            "Max риск": f"{c['max_risk']:.2f}",
+            "Avg риск": f"{c['avg_risk']:.2f}"
         } for c in cr])
         st.dataframe(df, use_container_width=True, hide_index=True)
 
@@ -758,20 +715,20 @@ if st.session_state.step == 3:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("🔄 Новый анализ", type="secondary", use_container_width=True):
+            if st.button("Новый анализ", type="secondary", use_container_width=True):
                 st.session_state.step = 0
                 st.session_state.components = []
                 st.session_state.component_versions = {}
                 st.session_state.analysis_results = []
                 st.rerun()
         with col2:
-            if st.button("📊 Детали анализа", type="primary", use_container_width=True):
+            if st.button("Детали анализа", type="primary", use_container_width=True):
                 st.session_state.step = 4
                 st.rerun()
         with col3:
             csv_data = df.to_csv(index=False, sep=';', decimal=',')
             st.download_button(
-                label="📥 Скачать CSV",
+                label="Скачать CSV",
                 data=csv_data,
                 file_name="risk_assessment_results.csv",
                 mime="text/csv",
@@ -780,9 +737,6 @@ if st.session_state.step == 3:
 
     st.stop()
 
-# ============================================================
-# ШАГ 4 — ДЕТАЛИ
-# ============================================================
 if st.session_state.step == 4:
     st.markdown(
         '<div class="results-header"><h1>Детали анализа</h1></div>',
@@ -828,7 +782,7 @@ if st.session_state.step == 4:
 
             st.markdown("### Уязвимости (CVE)")
             cve_data = [{
-                "CVE":  cve["cve"],
+                "CVE": cve["cve"],
                 "CVSS": f"{cve['cvss']:.1f}" if cve['cvss'] else "N/A",
                 "EPSS": f"{cve['epss']:.4f}" if cve['epss'] else "N/A",
                 "Риск": f"{cve['risk']:.4f}"
@@ -860,13 +814,10 @@ if st.session_state.step == 4:
 
     st.stop()
 
-# ============================================================
-# ФУТЕР
-# ============================================================
 st.divider()
 st.markdown(
     "<div style='text-align:center;color:gray;font-size:0.9em;'>"
-    "ВКР [Date3] «Информационная безопасность»"
+    "ВКР 10.03.01 «Информационная безопасность»"
     "</div>",
     unsafe_allow_html=True
 )
