@@ -7,7 +7,7 @@
 ### 1. Установка зависимостей
 
 ```bash
-cd /Users/an.s.baranova/ontology-for-assessing-the-information-security-risk-of-applications
+cd /ontology-for-assessing-the-information-security-risk-of-applications
 source .venv/bin/activate
 pip install -r requirements.txt
 ```

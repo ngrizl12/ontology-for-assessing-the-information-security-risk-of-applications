@@ -56,9 +56,9 @@ if not st.session_state.data_loaded:
     env_path = Path(__file__).parent.parent.parent / ".local.env"
     load_dotenv(env_path)
     
-    ONTO_PATH = os.getenv("ONTO_PATH") or "/Users/an.s.baranova/ontology-for-assessing-the-information-security-risk-of-applications/owl_files_processing/owl_files/security_ontology_full.owl"
-    CWE_CSV_PATH = os.getenv("CWE_OUTPUT_CSV") or "/Users/an.s.baranova/ontology-for-assessing-the-information-security-risk-of-applications/data_processing/csv_files_ready/cwe_all.csv"
-    CAPEC_CSV_PATH = os.getenv("CAPEC_OUTPUT") or "/Users/an.s.baranova/ontology-for-assessing-the-information-security-risk-of-applications/data_processing/csv_files_ready/capec_all.csv"
+    ONTO_PATH = os.getenv("ONTO_PATH")
+    CWE_CSV_PATH = os.getenv("CWE_OUTPUT_CSV")
+    CAPEC_CSV_PATH = os.getenv("CAPEC_OUTPUT")
     CWE_CHAINS_FILE = os.getenv("CWE_CHAINS_OUTPUT")
     RISK_REFERENCE_FILE = os.getenv("RISK_REFERENCE_OUTPUT")
     CVE_PROCESSING_OUTPUT = os.getenv("CVE_PROCESSING_OUTPUT")
