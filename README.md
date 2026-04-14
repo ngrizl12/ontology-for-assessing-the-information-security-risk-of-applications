@@ -15,17 +15,20 @@
 - **Логический вывод** с использованием OWL reasoner (HermiT) для выявления транзитивных связей CWE
 - **Расчет риска** на основе CVSS, EPSS, цепочек CWE и важности компонента
 - **Нормализация риска** через эмпирическое распределение (референсные перцентили)
-- **Интерактивный анализ** компонентов приложения с выводом детального отчета
+- **Веб-интерфейс** для интерактивного анализа компонентов с детальным отчётом
 
 ---
 
 ## Структура проекта
 
+> **Примечание:** Большие файлы данных (CSV, XML, OWL) не включены в репозиторий и загружаются отдельно. Ссылки на скачивание указаны в соответствующих `.md` файлах.
+
 ```
-hihihaha/
+ontology-for-assessing-the-information-security-risk-of-applications/
 ├── data_processing/                      # Модуль загрузки и обработки данных
 │   ├── csv_files_ready/                  # Готовые CSV файлы
-│   │   └── all_cvs_data.md               # Ссылка на скачивание CSV
+│   │   ├── all_cvs_data.md               # Ссылка на скачивание CSV
+│   │                
 │   ├── data loaders/                     # Скрипты загрузки данных
 │   │   ├── cve_api_loader.py             # Загрузка CVE из NVD API
 │   │   ├── cpe_api_loader.py             # Загрузка CPE из NVD API
@@ -39,18 +42,29 @@ hihihaha/
 ├── owl_files_processing/                 # Модуль построения онтологии
 │   ├── owl_files/
 │   │   ├── security_ontology_structure.owl   # Структура онтологии
-│   │   └── security_ontology_full.md         # Ссылка на скачивание OWL
+│   │   └── security_ontology_full.md         # Ссылка на скачивание OWL полной онтологии
 │   └── scripts_for_create_ontology/
 │       ├── create_ontology_structure.py  # Создание структуры онтологии
 │       └── import_data_in_ontology.py    # Импорт данных в онтологию
 │
-└── scripts_for_create_reasoning/         # Модуль логического вывода и расчета риска
-    ├── owl_reasoning_build_cwe_chains.py # Построение цепочек CWE через reasoner
-    ├── build_risk_reference.py           # Построение референсного распределения
-    ├── risk_calculation.py               # Главный модуль расчета риска
-    └── risk_calculation_preparation_data/
-        ├── cwe_chains.json               # Кэш цепочек CWE
-        └── risk_reference_distribution.json  # Референсное распределение рисков
+├── scripts_for_create_reasoning/         # Модуль логического вывода и расчета риска
+│   ├── owl_reasoning_build_cwe_chains.py # Построение цепочек CWE через reasoner
+│   ├── build_risk_reference.py           # Построение референсного распределения
+│   ├── risk_calculation.py               # Главный модуль расчета риска
+│   ├── risk_calculation_web.py           # Веб-версия расчета риска
+│   ├── risk_calculation_preparation_data/
+│   │   ├── cwe_chains.json               # Кэш цепочек CWE
+│   │   └── risk_reference_distribution.json  # Референсное распределение
+│   └── web_interface/                    # Веб-интерфейс (Streamlit)
+│       ├── app.py                        # Основное приложение
+│       ├── styles.css                    # Файл стилей
+│       ├── requirements.txt              # Зависимости
+│       └── README.md                     # Документация веб-интерфейса
+│
+├── .local.env                            # [создаётся] Переменные окружения
+├── .venv/                                # [создаётся] Виртуальное окружение
+├── requirements.txt                      # Основные зависимости
+└── README.md                             # Этот файл
 ```
 
 ---
@@ -59,7 +73,7 @@ hihihaha/
 
 ### Требования
 
-- Python 3.14+
+- Python 3.10+
 - Java (для OWL reasoner HermiT)
 - 8+ GB RAM (рекомендуется 16 GB для работы с полной онтологией)
 
@@ -67,10 +81,8 @@ hihihaha/
 
 ```bash
 # Создание виртуального окружения
-python3.14 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # macOS/Linux
-# или
-.venv\Scripts\activate  # Windows
 
 # Установка зависимостей
 pip install -r requirements.txt
@@ -84,6 +96,7 @@ owlready2>=0.40.0
 python-dotenv>=1.0.0
 tqdm>=4.65.0
 deep-translator>=1.9.0
+streamlit>=1.28.0
 ```
 
 ---
@@ -201,62 +214,48 @@ python scripts_for_create_reasoning/build_risk_reference.py
 
 ### Этап 5: Расчет риска для компонентов приложения
 
+#### Консольный режим
+
 ```bash
 python scripts_for_create_reasoning/risk_calculation.py
 ```
 
-**Входные данные:**
-- Компоненты приложения (например, "python 3.9, java 8")
-- Онтология с данными
-- CWE цепочки
-- Референсное распределение
+#### Веб-интерфейс (рекомендуется)
 
-**Выходные данные:** Консольный отчет с рисками для каждого компонента и приложения в целом.
-
-**Пример ввода:**
-```
-Введите компоненты (например 'python 3.9, java 8' или 'google chrome 90.0'): python 3.9, django 4.2
+```bash
+cd scripts_for_create_reasoning/web_interface
+streamlit run app.py
 ```
 
-**Пример вывода:**
-```
-======================================================================
-АНАЛИЗ КОМПОНЕНТА: python 3.9
-======================================================================
-  Поиск: vendor=None, product=python, version=3.9
-  Найдено 15 CPE для продукта 'python'
-  
-  Найдено уязвимостей: 42
-  
-  Уязвимости и риски:
-    CVE-2021-3177: CVSS=9.8, EPSS=0.034521, percentile=98.5%, RISK=7.234567 (importance=critical, chain_multiplier=1.50x)
-    CVE-2022-0391: CVSS=7.5, EPSS=0.012345, percentile=85.2%, RISK=4.567890 (importance=critical, no chain)
-    ...
-  
-  Метрики риска компонента:
-    Количество уязвимостей: 42
-    Важность компонента: critical (коэффициент 1.0)
-    Максимальный риск (max): 7.234567
-    Средний риск (avg): 2.345678
+**Веб-интерфейс доступен по адресу:** http://localhost:8501
 
-======================================================================
-ОБЩИЙ РИСК ПРИЛОЖЕНИЯ
-======================================================================
-  Сводка по компонентам:
-  Компонент                 CVE   Importance   Max Risk       Avg Risk      
-  --------------------------------------------------------------------------
-  python 3.9                42    critical (1.0) 7.234567       2.345678      
-  django 4.2                15    high (0.75)   3.456789       1.234567      
-  
-  Расчет риска приложения:
-    Max риск среди компонентов: 7.234567
-    Количество уязвимостей (CVE): 57
-    Логарифмический фактор: log(1 + 57) = 4.060443
-  
-  ОБЩИЙ РИСК ПРИЛОЖЕНИЯ: 11.29/24
-  УРОВЕНЬ РИСКА: Средний
-======================================================================
+---
+
+## Веб-интерфейс
+
+### Возможности
+
+- **Пошаговый анализ** — ввод компонентов, выбор версий, оценка важности
+- **Визуализация рисков** — цветная индикация уровней риска
+- **Детальный отчёт** — информация по каждой уязвимости (CVE, CVSS, EPSS, риск)
+- **Экспорт данных** — выгрузка результатов в CSV
+
+### Запуск
+
+```bash
+cd scripts_for_create_reasoning/web_interface
+streamlit run app.py
 ```
+
+### Этапы анализа
+
+1. **Ввод компонентов** — названия и версии (например: `python 3.9, google chrome 90.0`)
+2. **Выбор версий** — выбор из базы или ручной ввод
+3. **Оценка важности** — коэффициент для каждого компонента
+4. **Результаты** — таблица рисков и общий риск приложения
+5. **Детали анализа** — подробная информация по уязвимостям
+
+Подробнее: [scripts_for_create_reasoning/web_interface/README.md](scripts_for_create_reasoning/web_interface/README.md)
 
 ---
 
@@ -339,7 +338,7 @@ R_app = max(R_component_i) + log(1 + N_CVE)
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    DATA LAYER (Загрузка данных)                 │
-│  NVD API ──→ CVE, CPE  │  CWE/CAPEC XML ──→ CSV                │
+│  NVD API → CVE, CPE  │  CWE/CAPEC XML → CSV                    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -363,7 +362,13 @@ R_app = max(R_component_i) + log(1 + N_CVE)
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    CALCULATION LAYER (Расчет риска)             │
-│  risk_calculation.py → Risk Dashboard                           │
+│  risk_calculation.py (CLI)  │  risk_calculation_web.py (Web)   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    PRESENTATION LAYER (Веб-интерфейс)           │
+│  Streamlit Dashboard → Интерактивный анализ и отчёты            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -372,12 +377,6 @@ R_app = max(R_component_i) + log(1 + N_CVE)
 ## Лицензия
 
 Проект создан в образовательных целях.
-
----
-
-## Контакты
-
-По вопросам обращайтесь: [ваш email]
 
 ---
 
@@ -410,3 +409,4 @@ curl "https://api.first.org/data/v1/epss?cve=CVE-2021-3177"
 - [OWL 2 Specification](https://www.w3.org/TR/owl2-overview/)
 - [Owlready2 Documentation](https://owlready2.readthedocs.io/)
 - [HermiT Reasoner](http://www.hermit-reasoner.com/)
+- [Streamlit Documentation](https://docs.streamlit.io/)
