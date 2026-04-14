@@ -29,7 +29,11 @@ YADISK_FILES = {
 # ============================================================
 def download_from_yadisk(public_url, output_path):
     if os.path.exists(output_path):
-        return True
+        # Проверяем что файл не пустой
+        if os.path.getsize(output_path) < 1000:
+            os.remove(output_path)  # удаляем битый файл
+        else:
+            return True
     try:
         api_url = "https://cloud-api.yandex.net/v1/disk/public/resources/download"
         response = requests.get(api_url, params={"public_key": public_url}, timeout=30)
