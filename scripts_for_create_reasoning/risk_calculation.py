@@ -17,7 +17,10 @@ cwe_chains_cache = {}
 
 owlready2.reasoning.JAVA_MEMORY = 8000
 
-load_dotenv(".local.env")
+from pathlib import Path
+env_path = Path(__file__).parent.parent.parent / ".local.env"
+load_dotenv(env_path)
+
 ONTO_PATH = os.getenv("ONTO_PATH")
 CWE_CSV_PATH = os.getenv("CWE_OUTPUT_CSV")
 CAPEC_CSV_PATH = os.getenv("CAPEC_OUTPUT")
@@ -30,12 +33,12 @@ cvss_cache = {}
 risk_reference_distribution = []
 
 RISK_REFERENCE_FILE = os.getenv("RISK_REFERENCE_OUTPUT")
-if os.path.exists(RISK_REFERENCE_FILE):
+if RISK_REFERENCE_FILE and os.path.exists(RISK_REFERENCE_FILE):
     with open(RISK_REFERENCE_FILE, 'r', encoding='utf-8') as f:
         risk_reference_distribution = json.load(f)
 
 cve_csv_path = os.getenv("CVE_PROCESSING_OUTPUT")
-if os.path.exists(cve_csv_path):
+if cve_csv_path and os.path.exists(cve_csv_path):
     cve_df = pd.read_csv(cve_csv_path)
     for _, row in cve_df.iterrows():
         cve_id = str(row.get('ID', '')).replace('-', '_')
@@ -100,15 +103,18 @@ def translate_text(text, max_length=500):
         translation_cache[text] = text
         return text
 
-cwe_df = pd.read_csv(CWE_CSV_PATH)
-cwe_dict = {}
-for _, row in cwe_df.iterrows():
-    cwe_id = str(row['ID']).strip()
-    cwe_dict[cwe_id] = {
-        'name': row['Name'] if pd.notna(row['Name']) else cwe_id,
-        'likelihood': row['Likelihood_Of_Exploit'] if pd.notna(row['Likelihood_Of_Exploit']) else None,
-        'category': row.get('Category', None) if pd.notna(row.get('Category', None)) else None
-    }
+if CWE_CSV_PATH and os.path.exists(CWE_CSV_PATH):
+    cwe_df = pd.read_csv(CWE_CSV_PATH)
+    cwe_dict = {}
+    for _, row in cwe_df.iterrows():
+        cwe_id = str(row['ID']).strip()
+        cwe_dict[cwe_id] = {
+            'name': row['Name'] if pd.notna(row['Name']) else cwe_id,
+            'likelihood': row['Likelihood_Of_Exploit'] if pd.notna(row['Likelihood_Of_Exploit']) else None,
+            'category': row.get('Category', None) if pd.notna(row.get('Category', None)) else None
+        }
+else:
+    cwe_dict = {}
 
 if CWE_CHAINS_FILE and os.path.exists(CWE_CHAINS_FILE):
     with open(CWE_CHAINS_FILE, 'r', encoding='utf-8') as f:
@@ -116,16 +122,19 @@ if CWE_CHAINS_FILE and os.path.exists(CWE_CHAINS_FILE):
 else:
     cwe_chains_cache = {}
 
-capec_df = pd.read_csv(CAPEC_CSV_PATH)
-capec_dict = {}
-for _, row in capec_df.iterrows():
-    capec_id = str(row['ID']).strip()
-    capec_dict[capec_id] = {
-        'name': row['Name'] if pd.notna(row['Name']) else capec_id,
-        'description': row['Description'] if pd.notna(row['Description']) else "Описание отсутствует",
-        'likelihood': row['Likelihood_Of_Attack'] if pd.notna(row['Likelihood_Of_Attack']) else None,
-        'typical_severity': row.get('Typical_Severity', None)
-    }
+if CAPEC_CSV_PATH and os.path.exists(CAPEC_CSV_PATH):
+    capec_df = pd.read_csv(CAPEC_CSV_PATH)
+    capec_dict = {}
+    for _, row in capec_df.iterrows():
+        capec_id = str(row['ID']).strip()
+        capec_dict[capec_id] = {
+            'name': row['Name'] if pd.notna(row['Name']) else capec_id,
+            'description': row['Description'] if pd.notna(row['Description']) else "Описание отсутствует",
+            'likelihood': row['Likelihood_Of_Attack'] if pd.notna(row['Likelihood_Of_Attack']) else None,
+            'typical_severity': row.get('Typical_Severity', None)
+        }
+else:
+    capec_dict = {}
 def get_risk_percentile(cvss, epss):
     if not risk_reference_distribution:
         return None

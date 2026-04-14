@@ -5,3 +5,5 @@
 *.csv
 *.xml
 owl_files_processing/owl_files/security_ontology_full.owl
+__pycache__
+**/vkr.md
