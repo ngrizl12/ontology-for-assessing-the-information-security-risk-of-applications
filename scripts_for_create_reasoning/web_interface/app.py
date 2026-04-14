@@ -16,12 +16,12 @@ import urllib.request
 # ССЫЛКИ НА ЯНДЕКС ДИСК
 # ============================================================
 YADISK_FILES = {
-    "security_ontology_full.owl":       "[InternalLinks82]:[InternalLinks83]",
-    "cwe_all.csv":                      "[InternalLinks84]:[InternalLinks85]",
-    "capec_all.csv":                    "[InternalLinks86]:[InternalLinks87]",
-    "cve_all_done.csv":                 "[InternalLinks88]:[InternalLinks89]",
-    "cwe_chains.json":                  "[InternalLinks90]:[InternalLinks91]",
-    "risk_reference_distribution.json": "[InternalLinks92]:[InternalLinks93]",
+    "security_ontology_full.owl": "https://disk.360.yandex.ru/d/-_sQlbE_G-Hvog",  # <- сюда
+    "cwe_all.csv":                "https://disk.360.yandex.ru/d/JG_e81Q-lqthQA",  # <- сюда
+    "capec_all.csv":              "https://disk.360.yandex.ru/d/LWInP1emg_xCHA",  # <- сюда
+    "cve_all_done.csv":           "https://disk.360.yandex.ru/d/kF-DPhyPmWC7_A",  # <- сюда
+    "cwe_chains.json":            "https://disk.360.yandex.ru/d/kpstkUDrpEo_qA",  # <- сюда
+    "risk_reference_distribution.json": "https://disk.360.yandex.ru/d/Tu7XjDS5STVP6w",  # <- сюда
 }
 
 # ============================================================
