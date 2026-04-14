@@ -51,7 +51,6 @@ ontology-for-assessing-the-information-security-risk-of-applications/
 │   ├── owl_reasoning_build_cwe_chains.py # Построение цепочек CWE через reasoner
 │   ├── build_risk_reference.py           # Построение референсного распределения
 │   ├── risk_calculation.py               # Главный модуль расчета риска
-│   ├── risk_calculation_web.py           # Веб-версия расчета риска
 │   ├── risk_calculation_preparation_data/
 │   │   ├── cwe_chains.json               # Кэш цепочек CWE
 │   │   └── risk_reference_distribution.json  # Референсное распределение
